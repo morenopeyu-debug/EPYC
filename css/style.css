@@ -1,0 +1,797 @@
+/* =====================================================================
+   EPYC — Todo para tus mascotas
+   Hoja de estilos de la interfaz.
+
+   PALETA
+   Tomada del logotipo: el teal y el naranja de las letras, el morado del
+   listón inferior y el crema del fondo. Cada color tiene un papel fijo,
+   y respetarlo es lo que hace que la interfaz se lea sin pensar:
+
+     morado   -> estructura (barra superior, encabezados)
+     teal     -> acción primaria (buscar, guardar, confirmar)
+     naranja  -> lo que reclama atención (avisos, pendientes, stock bajo)
+     rojo     -> destructivo o error (rechazar, sin existencias)
+     verde    -> confirmación (aceptado)
+
+   Esto es SÓLO presentación: no se tocó ninguna regla de negocio.
+   ===================================================================== */
+
+:root {
+    /* --- Paleta del logotipo --- */
+    --teal:        #1B99A6;
+    --teal-600:    #157F8A;
+    --teal-700:    #10646D;
+    --teal-050:    #E6F5F7;
+
+    --naranja:     #E8731A;
+    --naranja-600: #C95F0D;
+    --naranja-050: #FDF0E3;
+
+    --morado:      #5C3A94;
+    --morado-700:  #472C74;
+    --morado-050:  #F0EBF8;
+
+    --crema:       #FAF4E9;
+    --cafe:        #BE7F42;
+    --rosa:        #F0A0A0;
+
+    /* --- Semánticos --- */
+    --peligro:     #C8372D;
+    --peligro-600: #A62A22;
+    --peligro-050: #FBEAE8;
+    --exito:       #2E7D52;
+    --exito-050:   #E8F5ED;
+
+    /* --- Neutros --- */
+    --superficie:  #FFFFFF;
+    --tinta:       #20232A;
+    --tenue:       #6B7280;
+    --linea:       #E7E2D8;
+
+    /* --- Formas --- */
+    --r:      14px;
+    --r-sm:    9px;
+    --r-pill: 999px;
+
+    --sombra:    0 1px 2px rgba(32, 35, 42, .05), 0 4px 14px rgba(32, 35, 42, .06);
+    --sombra-md: 0 2px 6px rgba(32, 35, 42, .07), 0 12px 28px rgba(32, 35, 42, .10);
+
+    /* Alto de la barra superior fija. Lo usa el encabezado de tabla para
+       saber dónde detenerse; si cambia el relleno de .topbar, cambia aquí. */
+    --alto-topbar: 58px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+    background: var(--crema);
+    color: var(--tinta);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* El teclado tiene que poder ver dónde va. */
+:focus-visible {
+    outline: 3px solid var(--naranja);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+}
+
+
+/* =====================================================================
+   LOGIN
+   ===================================================================== */
+.login-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+    background:
+        radial-gradient(circle at 12% 18%, rgba(27, 153, 166, .16), transparent 42%),
+        radial-gradient(circle at 88% 12%, rgba(232, 115, 26, .16), transparent 40%),
+        radial-gradient(circle at 76% 88%, rgba(92, 58, 148, .18), transparent 45%),
+        var(--crema);
+}
+
+.login-box {
+    background: var(--superficie);
+    padding: 38px 34px 34px;
+    border-radius: 22px;
+    width: 100%;
+    max-width: 380px;
+    box-shadow: var(--sombra-md);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Franja tricolor: la firma del logotipo, sin necesidad de imagen. */
+.login-box::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 6px;
+    background: linear-gradient(90deg,
+        var(--teal) 0 33%, var(--naranja) 33% 66%, var(--morado) 66% 100%);
+}
+
+.login-box h1 {
+    margin: 6px 0 2px;
+    font-size: 30px;
+    letter-spacing: .5px;
+    text-align: center;
+    font-weight: 800;
+}
+
+.login-box .subtitle {
+    text-align: center;
+    color: var(--tenue);
+    margin: 0 0 24px;
+    font-size: 13px;
+}
+
+.login-box label {
+    display: block;
+    margin: 14px 0 5px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--morado-700);
+}
+
+.login-box select,
+.login-box input {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1.5px solid var(--linea);
+    border-radius: var(--r-sm);
+    font-size: 15px;
+    font-family: inherit;
+    background: #fff;
+    transition: border-color .15s, box-shadow .15s;
+}
+
+.login-box select:focus,
+.login-box input:focus {
+    outline: none;
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px var(--teal-050);
+}
+
+.login-box button {
+    width: 100%;
+    margin-top: 26px;
+    padding: 13px;
+    background: var(--teal);
+    color: #fff;
+    border: none;
+    border-radius: var(--r-sm);
+    font-size: 16px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background .15s, transform .05s;
+}
+
+.login-box button:hover  { background: var(--teal-600); }
+.login-box button:active { transform: translateY(1px); }
+
+
+/* =====================================================================
+   MARCA  —  reproduce el logotipo con texto, sin archivo de imagen
+   ===================================================================== */
+.marca {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    text-decoration: none;
+    background: #fff;
+    padding: 7px 15px;
+    border-radius: var(--r-pill);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .16);
+    flex-shrink: 0;
+}
+
+.marca-huella { font-size: 17px; line-height: 1; }
+
+.marca-texto {
+    font-size: 23px;
+    font-weight: 900;
+    letter-spacing: .5px;
+    line-height: 1;
+}
+
+/* Los mismos colores y en el mismo orden que las letras del logotipo. */
+.marca-texto .l-e { color: var(--teal); }
+.marca-texto .l-p { color: var(--naranja); }
+.marca-texto .l-y { color: var(--morado); }
+.marca-texto .l-c { color: var(--teal); }
+
+.marca-lema {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .6px;
+    text-transform: uppercase;
+    color: var(--tenue);
+    border-left: 1.5px solid var(--linea);
+    padding-left: 9px;
+}
+
+.login-marca {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 4px;
+}
+
+.login-marca .marca {
+    box-shadow: none;
+    padding: 0;
+    gap: 10px;
+}
+
+.login-marca .marca-texto { font-size: 40px; }
+
+
+/* =====================================================================
+   BARRA SUPERIOR
+   ===================================================================== */
+.topbar {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    background: var(--morado);
+    color: #fff;
+    padding: 11px 24px;
+    position: sticky;      /* la navegación no se pierde en tablas largas */
+    top: 0;
+    z-index: 50;
+    box-shadow: 0 2px 12px rgba(32, 35, 42, .18);
+}
+
+.topbar nav {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    flex: 1;
+}
+
+.topbar nav a {
+    color: rgba(255, 255, 255, .88);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 8px 13px;
+    border-radius: var(--r-sm);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background .15s, color .15s;
+}
+
+.topbar nav a:hover {
+    background: rgba(255, 255, 255, .14);
+    color: #fff;
+}
+
+/* Dónde estoy parado: se marca, no se adivina. */
+.topbar nav a.activo {
+    background: #fff;
+    color: var(--morado);
+}
+
+.usuario-info {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 13px;
+    margin-left: auto;
+}
+
+.usuario-nombre { opacity: .92; }
+
+.usuario-sede {
+    background: var(--teal);
+    padding: 3px 11px;
+    border-radius: var(--r-pill);
+    font-weight: 700;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.btn-salir {
+    background: rgba(255, 255, 255, .16);
+    padding: 7px 14px;
+    border-radius: var(--r-sm);
+    color: #fff;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    transition: background .15s;
+    white-space: nowrap;
+}
+
+.btn-salir:hover { background: rgba(255, 255, 255, .3); }
+
+/* Contador de pendientes: naranja, que es el color de "atiéndeme". */
+.nav-badge {
+    display: inline-block;
+    background: var(--naranja);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    border-radius: var(--r-pill);
+    padding: 1px 7px;
+    min-width: 19px;
+    text-align: center;
+}
+
+.topbar nav a.activo .nav-badge { background: var(--naranja); }
+
+
+/* =====================================================================
+   CONTENIDO Y TIPOGRAFÍA
+   ===================================================================== */
+.contenido {
+    max-width: 1180px;
+    margin: 28px auto;
+    padding: 0 20px 56px;
+}
+
+h2 {
+    color: var(--morado-700);
+    font-size: 27px;
+    font-weight: 800;
+    margin: 0 0 18px;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+}
+
+/* Barrita teal a la izquierda del título: ancla la vista. */
+h2::before {
+    content: '';
+    width: 5px;
+    height: 27px;
+    border-radius: var(--r-pill);
+    background: var(--teal);
+    flex-shrink: 0;
+}
+
+h3 {
+    margin: 36px 0 14px;
+    color: var(--morado-700);
+    font-size: 18px;
+    font-weight: 700;
+}
+
+a { color: var(--teal-700); }
+
+
+/* =====================================================================
+   AVISOS
+   ===================================================================== */
+.alerta-error,
+.alerta-info {
+    padding: 13px 17px;
+    border-radius: var(--r-sm);
+    margin-bottom: 18px;
+    font-size: 14px;
+    border-left: 5px solid;
+    display: flex;
+    gap: 9px;
+}
+
+.alerta-error {
+    background: var(--peligro-050);
+    color: #8C231C;
+    border-left-color: var(--peligro);
+}
+
+.alerta-info {
+    background: var(--exito-050);
+    color: #1D5A3A;
+    border-left-color: var(--exito);
+}
+
+.alerta-error::before { content: '⚠'; }
+.alerta-info::before  { content: '✓'; font-weight: 800; }
+
+.login-box .alerta-error { margin-bottom: 4px; font-size: 13px; }
+
+.nota {
+    background: var(--naranja-050);
+    border-left: 5px solid var(--naranja);
+    padding: 13px 17px;
+    border-radius: var(--r-sm);
+    font-size: 13.5px;
+    color: #7A4310;
+    margin: 0 0 20px;
+}
+
+.nota a { color: var(--naranja-600); font-weight: 600; }
+
+.ayuda {
+    font-size: 12px;
+    color: var(--tenue);
+    line-height: 1.45;
+}
+
+
+/* =====================================================================
+   BÚSQUEDA Y FORMULARIOS
+   ===================================================================== */
+.barra-busqueda {
+    display: flex;
+    gap: 10px;
+    margin: 0 0 20px;
+    flex-wrap: wrap;
+    align-items: center;
+    background: var(--superficie);
+    padding: 14px;
+    border-radius: var(--r);
+    box-shadow: var(--sombra);
+}
+
+.barra-busqueda input,
+.barra-busqueda select {
+    padding: 9px 12px;
+    border: 1.5px solid var(--linea);
+    border-radius: var(--r-sm);
+    font-size: 14px;
+    font-family: inherit;
+    background: #fff;
+    transition: border-color .15s, box-shadow .15s;
+}
+
+.barra-busqueda input { min-width: 220px; flex: 1 1 220px; }
+
+.barra-busqueda input:focus,
+.barra-busqueda select:focus {
+    outline: none;
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px var(--teal-050);
+}
+
+.barra-busqueda button {
+    padding: 9px 20px;
+    background: var(--teal);
+    color: #fff;
+    border: none;
+    border-radius: var(--r-sm);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    transition: background .15s;
+}
+
+.barra-busqueda button:hover { background: var(--teal-600); }
+
+/* Alta de producto: es la acción destacada, por eso va en naranja. */
+.btn-nuevo {
+    margin-left: auto;
+    background: var(--naranja);
+    color: #fff;
+    padding: 9px 18px;
+    border-radius: var(--r-sm);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 700;
+    transition: background .15s;
+    white-space: nowrap;
+}
+
+.btn-nuevo:hover { background: var(--naranja-600); color: #fff; }
+
+.formulario {
+    background: var(--superficie);
+    padding: 26px 28px 28px;
+    border-radius: var(--r);
+    max-width: 480px;
+    box-shadow: var(--sombra);
+    border-top: 4px solid var(--teal);
+}
+
+.formulario label {
+    display: block;
+    margin: 16px 0 5px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--morado-700);
+}
+
+.formulario label:first-of-type { margin-top: 0; }
+
+.formulario input,
+.formulario select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--linea);
+    border-radius: var(--r-sm);
+    font-size: 14.5px;
+    font-family: inherit;
+    background: #fff;
+    transition: border-color .15s, box-shadow .15s;
+}
+
+.formulario input:focus,
+.formulario select:focus {
+    outline: none;
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px var(--teal-050);
+}
+
+.formulario button {
+    margin-top: 24px;
+    padding: 12px 26px;
+    background: var(--teal);
+    color: #fff;
+    border: none;
+    border-radius: var(--r-sm);
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: inherit;
+    transition: background .15s, transform .05s;
+}
+
+.formulario button:hover  { background: var(--teal-600); }
+.formulario button:active { transform: translateY(1px); }
+
+.formulario-ancho { max-width: 660px; }
+
+.btn-cancelar {
+    margin-left: 14px;
+    color: var(--tenue);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.btn-cancelar:hover { color: var(--tinta); text-decoration: underline; }
+
+.form-inline {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.form-inline input {
+    padding: 6px 9px;
+    border: 1.5px solid var(--linea);
+    border-radius: 7px;
+    font-size: 13px;
+    font-family: inherit;
+}
+
+.form-inline input:focus {
+    outline: none;
+    border-color: var(--teal);
+    box-shadow: 0 0 0 2px var(--teal-050);
+}
+
+.form-inline button {
+    padding: 7px 13px;
+    background: var(--teal);
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 12.5px;
+    font-weight: 700;
+    font-family: inherit;
+    white-space: nowrap;
+    transition: background .15s;
+}
+
+.form-inline button:hover { background: var(--teal-600); }
+
+/* La barra de búsqueda que además es formulario (el barrido de alertas). */
+.barra-busqueda.form-inline { justify-content: flex-start; }
+
+.btn-peligro { background: var(--peligro) !important; }
+.btn-peligro:hover { background: var(--peligro-600) !important; }
+
+
+/* =====================================================================
+   TABLAS
+   ===================================================================== */
+.tabla {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--superficie);
+    border-radius: var(--r);
+    box-shadow: var(--sombra);
+    margin-bottom: 8px;
+    /* Sin overflow:hidden a propósito: convierte a la tabla en contenedor
+       de desplazamiento y eso rompe el position:sticky del encabezado
+       —lo desplaza hacia abajo y tapa la primera fila—. Las esquinas se
+       redondean celda por celda, más abajo. */
+}
+
+.tabla thead th:first-child { border-top-left-radius:  var(--r); }
+.tabla thead th:last-child  { border-top-right-radius: var(--r); }
+.tabla tbody tr:last-child td:first-child { border-bottom-left-radius:  var(--r); }
+.tabla tbody tr:last-child td:last-child  { border-bottom-right-radius: var(--r); }
+
+.tabla th,
+.tabla td {
+    padding: 12px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--linea);
+    font-size: 14px;
+    vertical-align: middle;
+}
+
+.tabla th {
+    background: var(--morado);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    border-bottom: none;
+    /* El encabezado no se pierde al bajar por una tabla de 30 renglones.
+       Se detiene justo debajo de la barra superior, que también es fija. */
+    position: sticky;
+    top: var(--alto-topbar);
+    z-index: 10;
+}
+
+.tabla tbody tr:last-child td { border-bottom: none; }
+.tabla tbody tr { transition: background .12s; }
+.tabla tbody tr:hover { background: var(--morado-050); }
+
+.tabla tr.fila-inactiva { opacity: .5; }
+
+/* Stock bajo es una advertencia, no un error: va en naranja. */
+.tabla tr.fila-alerta { background: var(--naranja-050); }
+.tabla tr.fila-alerta:hover { background: #FBE6D2; }
+
+.tabla a {
+    color: var(--teal-700);
+    margin-right: 4px;
+    font-weight: 600;
+}
+
+.celda-alerta {
+    background: var(--peligro-050);
+    color: var(--peligro);
+    font-weight: 800;
+}
+
+.num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.vacio {
+    text-align: center;
+    color: var(--tenue);
+    font-style: italic;
+    padding: 32px !important;
+}
+
+
+/* =====================================================================
+   TARJETAS DE RESUMEN
+   ===================================================================== */
+.tarjetas {
+    display: flex;
+    gap: 16px;
+    margin: 0 0 26px;
+    flex-wrap: wrap;
+}
+
+.tarjeta {
+    background: var(--superficie);
+    border-radius: var(--r);
+    padding: 20px 28px;
+    box-shadow: var(--sombra);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 160px;
+    flex: 1 1 160px;
+    border-top: 4px solid var(--teal);
+}
+
+/* Cada tarjeta con su color, para distinguirlas de un vistazo. */
+.tarjeta:nth-child(2) { border-top-color: var(--morado); }
+.tarjeta:nth-child(3) { border-top-color: var(--naranja); }
+
+.tarjeta-valor {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--teal-700);
+    line-height: 1.15;
+}
+
+.tarjeta:nth-child(2) .tarjeta-valor { color: var(--morado); }
+.tarjeta:nth-child(3) .tarjeta-valor { color: var(--naranja-600); }
+
+.tarjeta-etiqueta {
+    font-size: 12px;
+    color: var(--tenue);
+    margin-top: 6px;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    font-weight: 600;
+}
+
+
+/* =====================================================================
+   CHIPS DE ESTADO
+   ===================================================================== */
+.chip {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: var(--r-pill);
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: .3px;
+    background: #EFEDE7;
+    color: #55524B;
+    white-space: nowrap;
+}
+
+.chip-pendiente { background: var(--naranja-050); color: #9A4E0B; }
+.chip-ofertado  { background: var(--teal-050);    color: var(--teal-700); }
+.chip-aceptado  { background: var(--exito-050);   color: #1D5A3A; }
+.chip-rechazado { background: var(--peligro-050); color: #8C231C; }
+
+
+/* =====================================================================
+   RESPONSIVO
+   ===================================================================== */
+@media (max-width: 900px) {
+    .topbar {
+        padding: 10px 14px;
+        gap: 12px;
+        position: static;   /* en móvil estorba más de lo que ayuda */
+    }
+
+    .marca-lema { display: none; }
+
+    .usuario-info {
+        width: 100%;
+        margin-left: 0;
+        justify-content: space-between;
+        order: 3;
+    }
+
+    .contenido { padding: 0 14px 40px; margin-top: 20px; }
+
+    h2 { font-size: 22px; }
+    h2::before { height: 22px; }
+
+    /* Las tablas anchas se desplazan solas en vez de romper la página. */
+    .tabla {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .tabla th { position: static; }
+
+    .tarjeta { padding: 16px; min-width: 120px; }
+    .tarjeta-valor { font-size: 25px; }
+}
+
+@media (max-width: 520px) {
+    .marca-texto { font-size: 20px; }
+    .barra-busqueda { padding: 11px; }
+    .barra-busqueda input { min-width: 100%; }
+    .btn-nuevo { margin-left: 0; width: 100%; text-align: center; }
+    .formulario { padding: 20px; }
+}

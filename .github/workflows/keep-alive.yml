@@ -1,0 +1,112 @@
+# =====================================================================
+# Mantiene despierto el servicio de EPYC en Render, DESDE LA NUBE.
+#
+# Es el mismo trabajo que hace scripts/keep_alive.py, pero corriendo en
+# los servidores de GitHub: no depende de que tu computadora esté
+# encendida, que es justo lo que se busca al alojar todo en la nube.
+#
+# ---------------------------------------------------------------------
+# ANTES DE USARLO, CONFIGURA LA DIRECCIÓN
+# ---------------------------------------------------------------------
+# En el repositorio: Settings > Secrets and variables > Actions >
+# pestaña "Variables" > New repository variable
+#
+#     Nombre: URL_SERVICIO
+#     Valor : https://epyc-inventario.duckdns.org
+#
+# Va como "variable" y no como "secret" porque una dirección pública no
+# es un secreto, y así se puede leer en los registros del trabajo.
+#
+# ---------------------------------------------------------------------
+# POR QUÉ ESTE HORARIO Y NO 24 HORAS
+# ---------------------------------------------------------------------
+# El plan gratuito de Render da 750 horas de instancia al mes, y un mes
+# tiene ~730. Mantenerlo despierto todo el día consume la cuota completa
+# y no deja margen para ningún otro servicio.
+#
+# Esta ventana cubre de 06:00 a 23:59 hora de México (UTC-6), que en UTC
+# son las 12:00-23:59 y las 00:00-05:59. Son ~18 h/día ≈ 540 h/mes:
+# el sitio está caliente cuando alguien lo va a usar y sobra cuota.
+#
+# Para las 24 horas, cambia el cron por:  - cron: '*/5 * * * *'
+#
+# ---------------------------------------------------------------------
+# DOS ADVERTENCIAS SOBRE LOS CRON DE GITHUB
+# ---------------------------------------------------------------------
+# 1. NO son puntuales. GitHub ejecuta los trabajos programados cuando
+#    tiene capacidad, y los retrasos de 5 a 15 minutos son normales. Por
+#    eso el trabajo hace VARIAS visitas espaciadas en lugar de una sola:
+#    así, aunque el disparo llegue tarde, el hueco entre visitas
+#    difícilmente supera los 15 minutos que Render tolera.
+#
+# 2. GitHub DESACTIVA los cron de repositorios sin actividad por 60
+#    días. Si el repositorio se queda quieto dos meses, entra a la
+#    pestaña Actions y reactívalo.
+# =====================================================================
+
+name: Mantener despierto el servicio
+
+on:
+  schedule:
+    - cron: '*/5 0-5,12-23 * * *'
+  # Permite dispararlo a mano desde la pestaña Actions, útil para
+  # despertar el servicio justo antes de una presentación.
+  workflow_dispatch:
+
+# Si un disparo se empalma con el anterior, que no se acumulen.
+concurrency:
+  group: keep-alive
+  cancel-in-progress: false
+
+jobs:
+  visitar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Visitar el servicio
+        env:
+          URL: ${{ vars.URL_SERVICIO }}
+        run: |
+          if [ -z "$URL" ]; then
+            echo "::error::Falta la variable URL_SERVICIO."
+            echo "Configúrala en Settings > Secrets and variables > Actions > Variables."
+            exit 1
+          fi
+
+          echo "Destino: $URL"
+
+          # Tres visitas separadas 90 segundos. Cubren el retraso típico
+          # del programador de GitHub sin dejar huecos de 15 minutos.
+          fallos=0
+          for i in 1 2 3; do
+            inicio=$(date +%s)
+
+            # --max-time 90: despertar un contenedor dormido tarda ~50s.
+            codigo=$(curl -sS -o /dev/null -w '%{http_code}' \
+                          --max-time 90 --retry 2 --retry-delay 5 \
+                          -A 'EPYC-KeepAlive/1.0 (GitHub Actions)' \
+                          "$URL" || echo "000")
+
+            segundos=$(( $(date +%s) - inicio ))
+
+            # Cualquier respuesta < 500 significa que está despierto.
+            if [ "$codigo" != "000" ] && [ "$codigo" -lt 500 ]; then
+              echo "  visita $i: HTTP $codigo en ${segundos}s  [OK]"
+            else
+              echo "  visita $i: HTTP $codigo en ${segundos}s  [FALLA]"
+              fallos=$((fallos + 1))
+            fi
+
+            [ "$i" -lt 3 ] && sleep 90
+          done
+
+          # Sólo se marca en rojo si fallaron las tres: una caída aislada
+          # durante el arranque en frío no debe llenarte el correo de
+          # avisos de trabajos fallidos.
+          if [ "$fallos" -ge 3 ]; then
+            echo "::error::Las tres visitas fallaron. Revisa el servicio en Render."
+            exit 1
+          fi
+
+          echo "Listo: $((3 - fallos))/3 visitas correctas."

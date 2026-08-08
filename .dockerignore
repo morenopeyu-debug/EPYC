@@ -1,0 +1,28 @@
+# Nada de esto tiene que estar dentro de la imagen que corre en la nube.
+
+# Credenciales locales: jamás deben viajar al contenedor.
+config.local.php
+
+# Historial y metadatos de git.
+.git
+.gitignore
+.github
+
+# Los scripts SQL se corren a mano en la consola de Neon, no en runtime.
+sql/
+
+# Documentación.
+*.md
+
+# Basura del sistema y del editor.
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+.DS_Store
+*.swp
+*~
+*.log
+
+# Utilidades que no corren dentro del contenedor.
+scripts/

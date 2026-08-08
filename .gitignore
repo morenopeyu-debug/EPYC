@@ -1,0 +1,40 @@
+# =====================================================================
+# config.local.php lleva la contraseña de Neon en texto plano: NO debe
+# subir al repositorio. La plantilla sin credenciales es
+# config.local.example.php, que sí se versiona.
+#
+# Al clonar el proyecto:
+#     cp config.local.example.php config.local.php
+#     # y rellenar NEON_HOST / NEON_USUARIO / NEON_PASSWORD
+#
+# En Render no se usa este archivo: allá los tres valores se definen
+# como variables de entorno del servicio.
+#
+# Si alguna vez subes la contraseña por accidente, no basta con borrarla
+# en un commit nuevo —queda en el historial—: rótala desde la consola de
+# Neon (Roles -> Reset password).
+# =====================================================================
+config.local.php
+
+# Credenciales sueltas
+.env
+.env.*
+*.pem
+*.key
+
+# Basura del sistema y del editor
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*~
+
+# Registros y temporales
+*.log
+_shot_*.html
+
+# Artefactos de Python
+__pycache__/
+*.pyc

@@ -1,0 +1,28 @@
+# =====================================================================
+# Finales de línea.
+#
+# Git en Windows convierte a CRLF al descargar. Para un script que va a
+# correr dentro de un contenedor Linux eso es fatal: el kernel lee la
+# primera línea como "#!/bin/sh\r", busca un intérprete llamado "sh\r"
+# que no existe, y el contenedor muere con un
+# "no such file or directory" que no menciona el verdadero problema.
+#
+# Estas reglas fuerzan LF en los archivos que Linux ejecuta, sin importar
+# desde qué sistema se clone el repositorio.
+# =====================================================================
+
+* text=auto
+
+*.sh            text eol=lf
+Dockerfile      text eol=lf
+*.conf          text eol=lf
+*.ini           text eol=lf
+*.yaml          text eol=lf
+*.yml           text eol=lf
+
+# Los .sql y .php los leen herramientas que aceptan ambos formatos, pero
+# unificarlos evita diferencias falsas en los commits.
+*.php           text eol=lf
+*.sql           text eol=lf
+*.css           text eol=lf
+*.md            text eol=lf

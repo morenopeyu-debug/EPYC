@@ -1,0 +1,39 @@
+# =====================================================================
+# Blueprint de Render.
+#
+# Con este archivo en la raíz del repositorio, Render puede crear el
+# servicio solo: New > Blueprint > eliges el repo. Si prefieres hacerlo
+# a mano desde el panel, el archivo no estorba.
+#
+# OJO con el plan gratuito: el servicio se DUERME tras 15 minutos sin
+# visitas y la siguiente petición tarda ~50 segundos en despertarlo.
+# Para una demostración en clase, entra un minuto antes.
+# =====================================================================
+
+services:
+  - type: web
+    name: epyc-inventario
+    runtime: docker
+    plan: free
+    region: oregon          # el más cercano a México entre los gratuitos
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+
+    # Render considera vivo el servicio si esta ruta responde. Se usa
+    # login.php y no index.php porque index redirige (302) y conviene
+    # comprobar una página que de verdad se pinta.
+    healthCheckPath: /login.php
+
+    envVars:
+      # Apaga los errores en pantalla y activa la cookie segura.
+      - key: APP_ENV
+        value: production
+
+      # sync:false = Render NO los guarda en el repositorio; los capturas
+      # una sola vez en el panel del servicio. Aquí sólo se declaran.
+      - key: NEON_HOST
+        sync: false
+      - key: NEON_USUARIO
+        sync: false
+      - key: NEON_PASSWORD
+        sync: false
