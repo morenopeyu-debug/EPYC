@@ -37,6 +37,33 @@ final class Database
 
         $c = $conexiones[$destino];
 
+        // -------------------------------------------------------------
+        // Neon publica dos endpoints para el mismo proyecto:
+        //
+        //   ep-xxxx.region.aws.neon.tech          <- directo
+        //   ep-xxxx-pooler.region.aws.neon.tech   <- PgBouncer
+        //
+        // El "-pooler" trabaja en MODO TRANSACCIÓN: reparte las
+        // conexiones de servidor por transacción, y no garantiza que dos
+        // sentencias seguidas caigan en la misma. Eso rompe cualquier
+        // transacción abierta desde PHP con beginTransaction():
+        //
+        //   · la segunda sentencia aterriza en otra conexión y responde
+        //     "current transaction is aborted, commands ignored...",
+        //   · o el COMMIT se pierde y la escritura se revierte en
+        //     silencio, con la aplicación informando éxito.
+        //
+        // Se observaron los dos síntomas en producción: dar de baja un
+        // producto fallaba, y el alta decía «Producto dado de alta» sin
+        // guardar nada. Por eso se fuerza el endpoint directo, aunque
+        // la configuración traiga el del pooler.
+        //
+        // El código ya no abre transacciones de cliente (cada escritura
+        // es una sola sentencia o una función almacenada), así que esto
+        // es la segunda línea de defensa, no la única.
+        // -------------------------------------------------------------
+        $c['host'] = preg_replace('/-pooler(?=\.)/', '', $c['host']);
+
         $dsn = sprintf(
             'pgsql:host=%s;port=%d;dbname=%s;sslmode=%s;connect_timeout=%d',
             $c['host'],

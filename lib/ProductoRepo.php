@@ -105,64 +105,60 @@ final class ProductoRepo
         return $stmt->fetch() ?: null;
     }
 
-    /** Alta. Devuelve el ProductoID nuevo y siembra su fila de inventario. */
+    /**
+     * Alta. Devuelve el ProductoID nuevo y siembra su fila de inventario
+     * en cero para las cuatro sedes, así el producto aparece desde el
+     * primer día en los tableros de todas.
+     *
+     * El código del producto no se captura: sale del identificador que
+     * asigna la base (columna IDENTITY) y se muestra con codigo_producto().
+     *
+     * Va todo en UNA sentencia, por la misma razón que cambiarEstado():
+     * el endpoint "-pooler" de Neon no conserva la conexión de servidor
+     * entre las sentencias de una transacción de cliente, y el COMMIT se
+     * perdía —el alta decía «Producto dado de alta» y no guardaba nada—.
+     * Una CTE que modifica datos es atómica por sí sola.
+     */
     public function crear(array $datos): int
     {
-        $this->pdo->beginTransaction();
-
-        try {
-            // RETURNING sustituye al OUTPUT ... INTO @tabla de SQL Server.
-            // Aquel rodeo existía porque dbo.Productos, al ser artículo de
-            // la replicación de mezcla, cargaba triggers y SQL Server
-            // prohíbe OUTPUT sin INTO sobre tablas con triggers. En
-            // Postgres nada de eso aplica: RETURNING funciona sin más.
-            $sql = 'INSERT INTO dbo."Productos"
+        $sql = 'WITH nuevo AS (
+                    INSERT INTO dbo."Productos"
                         ("Nombre", "CategoriaID", "ProveedorID", "TipoMascota", "Marca",
                          "Talla", "PrecioUnitario", "StockMinimo", "Activo")
                     VALUES (:nombre, :categoria, :proveedor, :tipo, :marca,
                             :talla, :precio, :stock_minimo, 1)
-                    RETURNING "ProductoID"';
+                 RETURNING "ProductoID"
+                ), inventario AS (
+                    INSERT INTO dbo."InventarioSucursal"
+                        ("SucursalID", "ProductoID", "Stock", "StockMinimo", "StockObjetivo")
+                    SELECT s."SucursalID", n."ProductoID", 0, :minimo, :objetivo
+                      FROM dbo."Sucursales" s
+                     CROSS JOIN nuevo n
+                    ON CONFLICT ("SucursalID", "ProductoID") DO NOTHING
+                )
+                SELECT "ProductoID" FROM nuevo';
 
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute([
-                'nombre'       => $datos['nombre'],
-                'categoria'    => $datos['categoria'],
-                // El formulario manda 0 cuando no hay proveedor elegido;
-                // 0 no existe en Proveedores y reventaría la llave foránea
-                // con un mensaje incomprensible.
-                'proveedor'    => $datos['proveedor'] > 0 ? $datos['proveedor'] : null,
-                'tipo'         => $datos['tipo_mascota'],
-                'marca'        => $datos['marca'] !== '' ? $datos['marca'] : null,
-                'talla'        => $datos['talla'] !== '' ? $datos['talla'] : null,
-                'precio'       => $datos['precio'],
-                'stock_minimo' => $datos['stock_minimo'],
-            ]);
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            'nombre'       => $datos['nombre'],
+            'categoria'    => $datos['categoria'],
+            // El formulario manda 0 cuando no hay proveedor elegido; 0 no
+            // existe en Proveedores y reventaría la llave foránea con un
+            // mensaje incomprensible.
+            'proveedor'    => $datos['proveedor'] > 0 ? $datos['proveedor'] : null,
+            'tipo'         => $datos['tipo_mascota'],
+            'marca'        => $datos['marca'] !== '' ? $datos['marca'] : null,
+            'talla'        => $datos['talla'] !== '' ? $datos['talla'] : null,
+            'precio'       => $datos['precio'],
+            'stock_minimo' => $datos['stock_minimo'],
+            'minimo'       => $datos['stock_minimo'] > 0 ? $datos['stock_minimo'] : UMBRAL_STOCK_BAJO,
+            'objetivo'     => $datos['stock_minimo'] > 0 ? $datos['stock_minimo'] * 4 : 20,
+        ]);
 
-            $productoId = (int) $stmt->fetchColumn();
-            $stmt->closeCursor();
+        $productoId = (int) $stmt->fetchColumn();
+        $stmt->closeCursor();
 
-            // Una fila (sucursal, producto) en cero para las cuatro sedes,
-            // para que el producto nuevo aparezca desde el primer día en
-            // los tableros de inventario de todas.
-            $this->pdo->prepare(
-                'INSERT INTO dbo."InventarioSucursal"
-                     ("SucursalID", "ProductoID", "Stock", "StockMinimo", "StockObjetivo")
-                 SELECT s."SucursalID", :producto, 0, :minimo, :objetivo
-                   FROM dbo."Sucursales" s
-                 ON CONFLICT ("SucursalID", "ProductoID") DO NOTHING'
-            )->execute([
-                'producto'  => $productoId,
-                'minimo'    => $datos['stock_minimo'] > 0 ? $datos['stock_minimo'] : UMBRAL_STOCK_BAJO,
-                'objetivo'  => $datos['stock_minimo'] > 0 ? $datos['stock_minimo'] * 4 : 20,
-            ]);
-
-            $this->pdo->commit();
-
-            return $productoId;
-        } catch (Throwable $e) {
-            $this->pdo->rollBack();
-            throw $e;
-        }
+        return $productoId;
     }
 
     /** Modificación de datos generales. No toca stock. */
@@ -193,36 +189,63 @@ final class ProductoRepo
     }
 
     /**
-     * Baja lógica / reactivación. Nunca DELETE.
+     * Baja lógica / reactivación. NUNCA se borra el renglón.
      *
-     * Al dar de baja se cierran las solicitudes abiertas del producto
-     * para que no queden requisiciones huérfanas esperando respuesta.
+     * La baja es siempre lógica ("Activo" = 0) porque hay referencias
+     * vivas al producto desde Movimientos, DetalleVenta, Transferencias
+     * e InventarioSucursal: un DELETE rompería el histórico de ventas.
+     *
+     * Al dar de baja se cierran además las solicitudes PENDIENTES del
+     * producto, para no dejar requisiciones huérfanas esperando una
+     * respuesta que ya no va a llegar.
+     *
+     * POR QUÉ TODO VA EN UNA SOLA SENTENCIA
+     * -------------------------------------
+     * Antes esto eran dos UPDATE dentro de beginTransaction()/commit(),
+     * y fallaba en el servidor con:
+     *
+     *     current transaction is aborted, commands ignored until
+     *     end of transaction block
+     *
+     * El host de Neon configurado es el endpoint "-pooler", que es
+     * PgBouncer en modo transacción: no garantiza que las sentencias de
+     * una transacción abierta desde el cliente caigan en la misma
+     * conexión de servidor. La segunda llegaba a otra conexión y el
+     * COMMIT se perdía.
+     *
+     * Con una CTE que modifica datos, las dos escrituras viajan en UNA
+     * sentencia. PostgreSQL la ejecuta dentro de su propia transacción
+     * implícita, así que la atomicidad se conserva sin depender de que
+     * el pooler mantenga el estado entre viajes.
      */
     public function cambiarEstado(int $productoId, bool $activo): void
     {
-        $this->pdo->beginTransaction();
-
-        try {
+        if ($activo) {
+            // Reactivar no toca solicitudes: basta un UPDATE.
             $this->pdo
-                 ->prepare('UPDATE dbo."Productos" SET "Activo" = ? WHERE "ProductoID" = ?')
-                 ->execute([$activo ? 1 : 0, $productoId]);
-
-            if (!$activo) {
-                $this->pdo->prepare(
-                    'UPDATE dbo."SolicitudesStock"
-                        SET "Estado"             = \'RECHAZADO\',
-                            "CantidadOfrecida"   = COALESCE("CantidadOfrecida", 0),
-                            "FechaRespuesta"     = dbo.ahora(),
-                            "ComentarioSucursal" = \'Cancelada: el producto fue dado de baja del catálogo.\'
-                      WHERE "ProductoID" = ? AND "Estado" = \'PENDIENTE\''
-                )->execute([$productoId]);
-            }
-
-            $this->pdo->commit();
-        } catch (Throwable $e) {
-            $this->pdo->rollBack();
-            throw $e;
+                 ->prepare('UPDATE dbo."Productos" SET "Activo" = 1 WHERE "ProductoID" = ?')
+                 ->execute([$productoId]);
+            return;
         }
+
+        // La CTE que modifica datos se ejecuta siempre, aunque el UPDATE
+        // exterior no encuentre ninguna solicitud que cerrar.
+        $sql = 'WITH baja AS (
+                    UPDATE dbo."Productos"
+                       SET "Activo" = 0
+                     WHERE "ProductoID" = :id
+                 RETURNING "ProductoID"
+                )
+                UPDATE dbo."SolicitudesStock" s
+                   SET "Estado"             = \'RECHAZADO\',
+                       "CantidadOfrecida"   = COALESCE(s."CantidadOfrecida", 0),
+                       "FechaRespuesta"     = dbo.ahora(),
+                       "ComentarioSucursal" = \'Cancelada: el producto fue dado de baja del catálogo.\'
+                  FROM baja
+                 WHERE s."ProductoID" = baja."ProductoID"
+                   AND s."Estado"     = \'PENDIENTE\'';
+
+        $this->pdo->prepare($sql)->execute(['id' => $productoId]);
     }
 
     /** ¿Hay envíos en tránsito de este producto? Bloquea la baja. */
