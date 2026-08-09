@@ -527,6 +527,16 @@ a { color: var(--teal-700); }
     box-shadow: 0 0 0 3px var(--teal-050);
 }
 
+/* Campos de sólo lectura (el código del producto): tienen que verse
+   distintos de los editables, o el usuario intenta escribir en ellos. */
+.formulario input:disabled {
+    background: #F4F2ED;
+    color: var(--tenue);
+    cursor: not-allowed;
+}
+
+.formulario .ayuda { margin: 5px 0 0; }
+
 .formulario button {
     margin-top: 24px;
     padding: 12px 26px;
@@ -673,6 +683,16 @@ a { color: var(--teal-700); }
     font-variant-numeric: tabular-nums;
 }
 
+/* Código de producto: monoespaciado para que los dígitos se alineen
+   entre renglones y el código se lea de un vistazo al compararlos. */
+.codigo {
+    font-family: 'Consolas', 'SF Mono', 'Menlo', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--morado);
+    white-space: nowrap;
+}
+
 .vacio {
     text-align: center;
     color: var(--tenue);
@@ -734,7 +754,7 @@ a { color: var(--teal-700); }
    ===================================================================== */
 .chip {
     display: inline-block;
-    padding: 4px 12px;
+    padding: 3px 11px;
     border-radius: var(--r-pill);
     font-size: 11.5px;
     font-weight: 700;
@@ -742,6 +762,11 @@ a { color: var(--teal-700); }
     background: #EFEDE7;
     color: #55524B;
     white-space: nowrap;
+    /* El borde no es adorno: el chip PENDIENTE y la fila en alerta usan
+       el mismo naranja claro de fondo, así que sin contorno el chip
+       desaparecía y quedaba como texto suelto. Con borde se lee como
+       etiqueta sobre cualquier fondo. */
+    border: 1px solid currentColor;
 }
 
 .chip-pendiente { background: var(--naranja-050); color: #9A4E0B; }

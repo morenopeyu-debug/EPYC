@@ -59,6 +59,15 @@ require_once __DIR__ . '/header.php';
     <?= csrf_campo() ?>
     <input type="hidden" name="producto_id" value="<?= $id ?>">
 
+    <label>Código</label>
+    <?php if ($id): ?>
+        <input type="text" value="<?= e(codigo_producto($id)) ?>" disabled>
+        <p class="ayuda">El código lo asigna el sistema y no se puede cambiar.</p>
+    <?php else: ?>
+        <input type="text" value="Se asignará al guardar" disabled>
+        <p class="ayuda">El sistema le dará un código consecutivo en cuanto guardes el producto.</p>
+    <?php endif; ?>
+
     <label>Nombre</label>
     <input type="text" name="nombre" value="<?= e($producto['Nombre']) ?>" required>
 

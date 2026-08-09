@@ -6,7 +6,7 @@
  * la requisición en cuanto una venta deja el producto en el punto de
  * reorden o por debajo. Esta pantalla sirve para ver el panorama, ajustar
  * los umbrales y forzar el barrido si algo se movió por fuera de la
- * aplicación (una carga masiva, una sincronización de replicación).
+ * aplicación (una carga masiva, un ajuste hecho a mano en la base).
  */
 require_once __DIR__ . '/bootstrap.php';
 
@@ -30,7 +30,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             flash(
                 'info',
                 $generadas > 0
-                    ? "Se generaron $generadas solicitudes de reabastecimiento hacia Central."
+                    ? ($generadas === 1 ? 'Se generó ' : 'Se generaron ')
+                        . pluralizar($generadas, 'solicitud', 'solicitudes')
+                        . ' de reabastecimiento hacia Central.'
                     : 'Todo en orden: no hay productos bajo el mínimo sin una solicitud abierta.'
             );
         } elseif ($accion === 'ajustar') {

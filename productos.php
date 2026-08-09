@@ -55,22 +55,24 @@ require_once __DIR__ . '/header.php';
 <table class="tabla">
     <thead>
         <tr>
+            <th>Código</th>
             <th>Producto</th>
             <th>Categoría</th>
             <th>Mascota</th>
             <th>Marca</th>
             <th>Talla</th>
             <th>Precio</th>
-            <th class="num">Stock (tu sucursal)</th>
+            <th class="num">Stock</th>
             <?php if ($esCentral): ?><th>Acciones</th><?php endif; ?>
         </tr>
     </thead>
     <tbody>
     <?php if (!$lista): ?>
-        <tr><td colspan="<?= $esCentral ? 8 : 7 ?>" class="vacio">Sin resultados.</td></tr>
+        <tr><td colspan="<?= $esCentral ? 9 : 8 ?>" class="vacio">Sin resultados.</td></tr>
     <?php endif; ?>
     <?php foreach ($lista as $row): ?>
         <tr class="<?= $row['Activo'] ? '' : 'fila-inactiva' ?> <?= $row['Stock'] <= $row['StockMinimo'] ? 'fila-alerta' : '' ?>">
+            <td class="codigo"><?= e(codigo_producto((int) $row['ProductoID'])) ?></td>
             <td><?= e($row['Nombre']) ?></td>
             <td><?= e($row['Categoria']) ?></td>
             <td><?= e($row['TipoMascota']) ?></td>

@@ -2,7 +2,7 @@
 /**
  * Catálogo maestro de productos.
  *
- * Sólo Central escribe aquí. Las sucursales leen el catálogo.
+ * Solo Central escribe aquí. Las sucursales leen el catálogo.
  * La baja es SIEMPRE lógica (Productos.Activo = 0): hay referencias
  * vivas desde Movimientos, DetalleVenta e InventarioSucursal.
  *

@@ -73,6 +73,34 @@ function texto(array $fuente, string $clave, string $default = ''): string
     return isset($fuente[$clave]) ? trim((string) $fuente[$clave]) : $default;
 }
 
+/**
+ * Código visible del producto, a partir de su identificador.
+ *
+ * El identificador lo asigna la base de datos sola (columna IDENTITY),
+ * así que un producto recién dado de alta ya trae su código sin que
+ * nadie lo capture. Aquí solo se le da formato para que se lea como un
+ * código de catálogo y no como un número suelto: P-0007, no 7.
+ */
+function codigo_producto(int $productoId): string
+{
+    return 'P-' . str_pad((string) $productoId, 4, '0', STR_PAD_LEFT);
+}
+
+/**
+ * Concuerda el sustantivo con la cantidad.
+ *
+ * Sin esto salían frases como «Quedan 1 unidades» o «Se generaron 1
+ * solicitudes» en cuanto la cifra era uno, que es justo el caso más
+ * frecuente al final de las existencias.
+ *
+ *   pluralizar(1, 'unidad', 'unidades')  ->  "1 unidad"
+ *   pluralizar(5, 'unidad', 'unidades')  ->  "5 unidades"
+ */
+function pluralizar(int $cantidad, string $singular, string $plural): string
+{
+    return $cantidad . ' ' . ($cantidad === 1 ? $singular : $plural);
+}
+
 /** Etiqueta CSS por estado de solicitud. */
 function clase_estado(string $estado): string
 {

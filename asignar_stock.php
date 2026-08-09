@@ -6,16 +6,16 @@
  *
  * POR QUÉ NO SE INCREMENTA LA SUCURSAL DE INMEDIATO
  * -------------------------------------------------
- * Bajo replicación de mezcla, la fila de inventario de Monterrey vive en
- * la base de Monterrey. Si Central le sumara stock desde su propia base,
- * ambos sitios estarían escribiendo la misma fila y el Merge Agent
- * tendría que elegir un ganador — que es exactamente el conflicto que
- * este rediseño elimina.
+ * La regla que gobierna todo el modelo es que cada sede escribe
+ * únicamente las filas de InventarioSucursal que le pertenecen. Si
+ * Central sumara stock a la fila de Monterrey, dos sedes estarían
+ * escribiendo el mismo renglón y se perdería el rastro de quién movió
+ * qué.
  *
  * Así que la asignación descuenta de Central y queda EN TRÁNSITO. La
- * sucursal la confirma desde su propia base (Requisiciones), que es la
- * única autorizada a incrementar su inventario. Además refleja la
- * realidad: la mercancía viaja, no se teletransporta.
+ * sucursal la confirma desde Requisiciones, y es la única autorizada a
+ * incrementar su propio inventario. Además refleja la realidad: la
+ * mercancía viaja, no se teletransporta.
  */
 require_once __DIR__ . '/bootstrap.php';
 
@@ -43,7 +43,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($cantidad <= 0) {
         flash('error', 'La cantidad a enviar debe ser mayor que cero.');
     } elseif ($cantidad > $stockCentral) {
-        flash('error', "Central sólo tiene $stockCentral unidades disponibles de ese producto.");
+        flash('error', 'Central solo tiene ' . pluralizar($stockCentral, 'unidad', 'unidades')
+            . ($stockCentral === 1 ? ' disponible' : ' disponibles') . ' de ese producto.');
     } else {
         try {
             $folio = $inventario->asignarASucursal(
@@ -177,10 +178,10 @@ require_once __DIR__ . '/header.php';
 
 <p class="ayuda">
     <?php if (!MODO_DEMO): ?>
-        Las cifras de las sucursales reflejan la última sincronización de la replicación de mezcla,
-        no el instante actual.
+        Cada sucursal consulta su propia base de datos, así que estas cifras pueden estar
+        desfasadas respecto a lo que ve la sucursal en este momento.
     <?php else: ?>
-        En modo demostración las cuatro columnas salen de la misma base, así que están siempre al día.
+        Las cuatro columnas salen de la misma base de datos, así que las cifras están al día.
     <?php endif; ?>
 </p>
 

@@ -55,7 +55,7 @@ function nav_activo(string $archivo): string
         <a href="solicitudes.php"<?= nav_activo('solicitudes.php') ?>>
             <?= $esCentral ? 'Solicitudes' : 'Mis solicitudes' ?>
             <?php if ($pendientesNav > 0): ?>
-                <span class="nav-badge" title="<?= $pendientesNav ?> esperan tu respuesta"><?= $pendientesNav ?></span>
+                <span class="nav-badge" title="<?= $pendientesNav === 1 ? '1 solicitud espera' : $pendientesNav . ' solicitudes esperan' ?> tu respuesta"><?= $pendientesNav ?></span>
             <?php endif; ?>
         </a>
     </nav>

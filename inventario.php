@@ -43,7 +43,7 @@ require_once __DIR__ . '/header.php';
 <h2>Inventario — <?= e(Auth::nombreSucursal()) ?></h2>
 
 <?php if (!$esCentral): ?>
-    <p class="nota">Aquí ves tu stock local. Para reponer un producto, usa el formulario de la fila: se envía como <strong>solicitud a Central</strong> (no se suma directo, así se mantiene consistente con la replicación). Para vender, usa <a href="ventas.php">Ventas</a>.</p>
+    <p class="nota">Aquí ves el stock de tu sucursal. Para reponer un producto, usa el formulario de su fila: se envía como <strong>solicitud a Central</strong> en lugar de sumarse directamente, porque la mercancía tiene que salir de un almacén antes de entrar al tuyo. Para vender, usa <a href="ventas.php">Ventas</a>.</p>
 <?php else: ?>
     <p class="nota">Central: aquí registras la <strong>entrada de mercancía</strong> del proveedor. Para mandar stock a una sucursal, usa <a href="asignar_stock.php">Asignar stock</a>.</p>
 <?php endif; ?>
@@ -56,6 +56,7 @@ require_once __DIR__ . '/header.php';
 <table class="tabla">
     <thead>
         <tr>
+            <th>Código</th>
             <th>Producto</th><th>Categoría</th>
             <th class="num">Stock</th><th class="num">Mínimo</th>
             <th><?= $esCentral ? 'Registrar entrada' : 'Solicitar reabastecimiento' ?></th>
@@ -63,10 +64,11 @@ require_once __DIR__ . '/header.php';
     </thead>
     <tbody>
     <?php if (!$lista): ?>
-        <tr><td colspan="5" class="vacio">Sin resultados.</td></tr>
+        <tr><td colspan="6" class="vacio">Sin resultados.</td></tr>
     <?php endif; ?>
     <?php foreach ($lista as $row): ?>
         <tr class="<?= $row['EnAlerta'] ? 'fila-alerta' : '' ?>">
+            <td class="codigo"><?= e(codigo_producto((int) $row['ProductoID'])) ?></td>
             <td><?= e($row['Producto']) ?></td>
             <td><?= e($row['Categoria']) ?></td>
             <td class="num"><?= (int) $row['Stock'] ?></td>

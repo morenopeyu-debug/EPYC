@@ -4,7 +4,7 @@
  *
  * Recepción del proveedor: producto nuevo o reabastecimiento. Es el
  * único punto por donde el stock ENTRA a la red; de aquí en adelante
- * sólo se mueve (Central → sucursal) o se consume (venta).
+ * solo se mueve (Central → sucursal) o se consume (venta).
  */
 require_once __DIR__ . '/bootstrap.php';
 
@@ -36,7 +36,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $referencia !== '' ? $referencia : null
             );
 
-            flash('info', "Entrada registrada: +$cantidad unidades. Stock en Central: $nuevoStock.");
+            flash('info', 'Entrada registrada: +' . pluralizar($cantidad, 'unidad', 'unidades')
+                . ". Stock en Central: $nuevoStock.");
         } catch (PDOException $e) {
             flash('error', Database::mensajeError($e));
         }

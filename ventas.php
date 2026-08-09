@@ -32,19 +32,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             // La validación de existencias real vive en el procedimiento,
             // dentro de la misma transacción que descuenta. Esta previa
-            // sólo sirve para dar un mensaje más claro.
+            // solo sirve para dar un mensaje más claro.
             $disponible = $inventario->stockDe($miSucursal, $productoId);
 
             if ($cantidad > $disponible) {
-                flash('error', "Sólo tienes $disponible unidades de ese producto en existencia.");
+                flash('error', 'Solo tienes ' . pluralizar($disponible, 'unidad', 'unidades')
+                    . ' de ese producto en existencia.');
             } else {
                 $resultado = $ventas->registrar($miSucursal, $productoId, $cantidad, Auth::empleadoId());
 
+                $restante = (int) $resultado['StockResultante'];
+
                 $mensaje = sprintf(
-                    'Venta #%d registrada por $%s. Quedan %d unidades.',
+                    'Venta #%d registrada por $%s. %s %s.',
                     $resultado['VentaID'],
                     number_format((float) $resultado['Total'], 2),
-                    $resultado['StockResultante']
+                    $restante === 1 ? 'Queda' : 'Quedan',
+                    pluralizar($restante, 'unidad', 'unidades')
                 );
 
                 if ($resultado['StockResultante'] <= UMBRAL_STOCK_BAJO) {
@@ -95,7 +99,7 @@ require_once __DIR__ . '/header.php';
             <option value="<?= (int) $p['ProductoID'] ?>" data-stock="<?= (int) $p['Stock'] ?>">
                 <?= e($p['Nombre']) ?><?= $p['Marca'] ? ' — ' . e($p['Marca']) : '' ?>
                 · $<?= number_format((float) $p['PrecioUnitario'], 2) ?>
-                · <?= (int) $p['Stock'] ?> disponibles
+                · <?= (int) $p['Stock'] === 1 ? '1 disponible' : (int) $p['Stock'] . ' disponibles' ?>
             </option>
         <?php endforeach; ?>
     </select>

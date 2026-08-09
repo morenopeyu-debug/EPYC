@@ -66,7 +66,7 @@ final class Database
 
         } catch (PDOException $e) {
             // ---------------------------------------------------------
-            // Camino de respaldo, sólo para libpq anteriores al soporte
+            // Camino de respaldo, solo para libpq anteriores al soporte
             // de SNI —como la que trae XAMPP—. Sin SNI, Neon no sabe a
             // qué endpoint mandarte y responde:
             //
@@ -117,7 +117,7 @@ final class Database
      * Corta la ejecución con un fallo de conexión, sin filtrar detalles.
      *
      * El detalle completo —host, base, error de red— va SIEMPRE al log,
-     * pero al visitante sólo se le muestra en desarrollo. En producción
+     * pero al visitante solo se le muestra en desarrollo. En producción
      * ese texto aparecía en la pantalla de login, y con él el nombre del
      * servidor de Neon y la base a la que intenta conectarse: información
      * de reconocimiento regalada a cualquiera que abra la página.
@@ -152,7 +152,7 @@ final class Database
      *   SQLSTATE[P0001]: Raise exception: 7 ERROR:  Stock insuficiente...
      *   CONTEXT:  PL/pgSQL function dbo.usp_registrar_venta(...) line 30
      *
-     * Se extrae sólo la primera línea después de "ERROR:", que es la
+     * Se extrae solo la primera línea después de "ERROR:", que es la
      * redactada; el CONTEXT es ruido para quien está en el mostrador.
      */
     public static function mensajeError(PDOException $e): string

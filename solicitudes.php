@@ -9,7 +9,7 @@
  * SUCURSAL  ve las ofertas OFERTADAS y decide: aceptar (el stock entra
  *           oficialmente a su inventario) o rechazar (Central reintegra).
  *
- * Todas las escrituras pasan por procedimientos almacenados; aquí sólo
+ * Todas las escrituras pasan por procedimientos almacenados; aquí solo
  * se valida la entrada y se traduce el resultado a un mensaje.
  */
 require_once __DIR__ . '/bootstrap.php';
@@ -44,9 +44,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } elseif ($cantidad <= 0) {
                 flash('error', 'La cantidad a enviar debe ser mayor que cero.');
             } elseif ($cantidad > (int) $solicitud['CantidadSolicitada']) {
-                flash('error', 'No puedes enviar más de lo solicitado (' . (int) $solicitud['CantidadSolicitada'] . ' unidades).');
+                flash('error', 'No puedes enviar más de lo solicitado ('
+                    . pluralizar((int) $solicitud['CantidadSolicitada'], 'unidad', 'unidades') . ').');
             } elseif ($cantidad > (int) $solicitud['StockCentral']) {
-                flash('error', 'Central sólo tiene ' . (int) $solicitud['StockCentral'] . ' unidades disponibles.');
+                $hay = (int) $solicitud['StockCentral'];
+                flash('error', 'Central solo tiene ' . pluralizar($hay, 'unidad', 'unidades')
+                    . ($hay === 1 ? ' disponible.' : ' disponibles.'));
             } else {
                 $solicitudes->ofertar($solicitudId, $cantidad, Auth::empleadoId(), $comentario);
 
@@ -79,8 +82,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($aceptar) {
                     $s = $solicitudes->obtener($solicitudId);
                     flash('info', sprintf(
-                        'Recepción confirmada: +%d unidades de %s. Stock actual en tu sucursal: %d.',
-                        (int) $s['CantidadOfrecida'],
+                        'Recepción confirmada: +%s de %s. Stock actual en tu sucursal: %d.',
+                        pluralizar((int) $s['CantidadOfrecida'], 'unidad', 'unidades'),
                         $s['Producto'],
                         (int) $s['StockSucursal']
                     ));
@@ -200,7 +203,7 @@ require_once __DIR__ . '/header.php';
                             <button type="submit"><?= $insuficiente ? 'Enviar parcial' : 'Enviar' ?></button>
                         </form>
                         <?php if ($insuficiente): ?>
-                            <div class="ayuda">Sólo alcanza para <?= $disponible ?> de <?= $pedido ?>.</div>
+                            <div class="ayuda">Solo alcanza para <?= $disponible ?> de <?= $pedido ?>.</div>
                         <?php endif; ?>
                     <?php endif; ?>
                 </td>

@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Usuario o contraseña incorrectos para esa sucursal.';
         } catch (Throwable $e) {
             // Database::fallaDeConexion ya redactó el mensaje según el
-            // entorno y mandó el detalle al log; aquí sólo se muestra.
+            // entorno y mandó el detalle al log; aquí solo se muestra.
             error_log('[EPYC] Login fallido por error de conexión: ' . $e->getMessage());
             $error = $e->getMessage();
         }
