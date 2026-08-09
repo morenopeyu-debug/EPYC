@@ -176,29 +176,49 @@ Tras 15 minutos sin visitas, Render apaga el contenedor y la siguiente
 petición tarda casi un minuto en responder. Hay dos formas de evitarlo;
 hacen exactamente lo mismo, la diferencia es **dónde corren**.
 
-### Opción A — En la nube (recomendada)
+### Opción A — Servicio de monitoreo externo (es la que se usa)
 
-`.github/workflows/keep-alive.yml` ya está en el repositorio. Sólo hay
-que decirle a qué dirección visitar:
+Un servicio dedicado que visita la página cada pocos minutos. Gratuitos
+y en la nube, así que no dependen de tu equipo:
 
-1. En el repositorio: **Settings → Secrets and variables → Actions**.
-2. Pestaña **Variables** → **New repository variable**.
-3. Nombre `URL_SERVICIO`, valor `https://epyc-inventario.duckdns.org`.
+- **[cron-job.org](https://cron-job.org)** — gratis, sin tarjeta, hasta
+  cada minuto.
+- **[UptimeRobot](https://uptimerobot.com)** — gratis cada 5 minutos, y
+  además avisa por correo si el sitio se cae.
 
-Listo. GitHub lo ejecuta solo, sin depender de tu computadora — que es
-justo el punto de tenerlo todo en la nube. Puedes dispararlo a mano
-desde la pestaña **Actions** para despertar el servicio antes de una
-presentación.
+Configuración: dirección `https://epyc-inventario.duckdns.org/login.php`,
+intervalo de 10 minutos. Son tres campos.
 
-Dos cosas que conviene saber de los cron de GitHub:
+### Opción B — GitHub Actions (respaldo, NO confiar en él)
 
-- **No son puntuales.** GitHub los ejecuta cuando tiene capacidad, y
-  retrasos de 5 a 15 minutos son normales. Por eso cada ejecución hace
-  tres visitas espaciadas 90 segundos en vez de una sola.
-- **Se desactivan solos** si el repositorio pasa 60 días sin actividad.
-  Se reactivan desde la pestaña Actions.
+`.github/workflows/keep-alive.yml` hace lo mismo desde GitHub. Está en
+el repositorio y funciona, pero **no sirve como método principal**, y
+esto está medido, no supuesto:
 
-### Opción B — Desde tu computadora
+> El cron está programado cada 5 minutos. En una ventana de dos horas
+> debieron dispararse ~26 ejecuciones. Se dispararon **3**, a intervalos
+> de aproximadamente una hora. Después estuvo más de dos horas sin
+> ejecutarse ni una vez.
+
+GitHub descarta ejecuciones programadas cuando su cola está saturada, y
+en repositorios gratuitos lo hace de forma agresiva. Con huecos de una
+hora y un *spin down* a los 15 minutos, no evita que el servicio se
+duerma. Por eso las tres visitas espaciadas que hace cada ejecución no
+alcanzan a compensar.
+
+Sirve como red de seguridad y para **despertar el servicio a mano** antes
+de una presentación: pestaña **Actions → Mantener despierto el servicio
+→ Run workflow**.
+
+Si quieres apuntarlo a otra dirección, crea la variable `URL_SERVICIO`
+en *Settings → Secrets and variables → Actions → pestaña **Variables***.
+Si no existe, usa la dirección de `onrender.com`, así que funciona sin
+configurar nada.
+
+> Ojo: GitHub **desactiva** los cron de repositorios sin actividad por 60
+> días. Se reactivan desde la pestaña Actions.
+
+### Opción C — Desde tu computadora
 
 ```bash
 python scripts/keep_alive.py https://epyc-inventario.duckdns.org
@@ -220,10 +240,14 @@ tiene ~730. Mantener el servicio despierto todo el día consume
 prácticamente la cuota completa: alcanza para **un** servicio, y si
 tienes otro en la misma cuenta te quedarás sin horas antes de fin de mes.
 
-Por eso ambas versiones vigilan de 06:00 a 23:59 hora de México (~18 h
-al día ≈ 540 h al mes). El sitio está despierto cuando alguien lo va a
-usar, y sobra margen. Si de verdad lo necesitas las 24 horas, en el YAML
-cambia el cron a `'*/5 * * * *'`.
+Por eso el workflow y el script de Python vigilan de 06:00 a 23:59 hora
+de México (~18 h al día ≈ 540 h al mes). El sitio está despierto cuando
+alguien lo va a usar, y sobra margen. Si de verdad lo necesitas las 24
+horas, en el YAML cambia el cron a `'*/5 * * * *'`.
+
+**Si usas un servicio externo, aplícale el mismo criterio**: cron-job.org
+y UptimeRobot permiten limitar el horario. Un monitor cada 5 minutos las
+24 horas mantiene el contenedor encendido todo el mes y agota la cuota.
 
 ---
 

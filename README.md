@@ -1,10 +1,27 @@
-# Sistema de Inventario Distribuido — Web (PHP + PostgreSQL/Neon)
+# 🐾 EPYC — Inventario Distribuido (PHP + PostgreSQL/Neon)
+
+### ▶ En línea: **https://epyc-inventario.duckdns.org**
+
+| Sucursal | Usuario | Contraseña |
+|---|---|---|
+| Central | `central` | `12345678` |
+| Monterrey | `monterrey` | `12345678` |
+| Puebla | `puebla` | `12345678` |
+| Querétaro | `queretaro` | `12345678` |
+
+> Corre en el plan gratuito de Render. Si lleva rato sin visitas, la
+> primera carga puede tardar ~50 segundos en despertar el contenedor.
+
+---
 
 Tienda de accesorios para perros y gatos con 4 sedes (Central, Monterrey,
 Puebla, Querétaro). El inventario está **particionado por sucursal**: cada
 sede escribe únicamente las filas que le pertenecen, y todo movimiento de
 stock hacia una sucursal pasa por un flujo de solicitud / oferta /
 respuesta en vez de un `UPDATE` directo.
+
+**Arquitectura:** navegador → **DuckDNS** (nombre) → **Render** (contenedor
+Docker con PHP + Apache) → **Neon** (4 bases PostgreSQL).
 
 > **Migrado desde SQL Server.** El proyecto original corría sobre 4
 > instancias de SQL Server con Replicación de Mezcla. Los scripts viejos se
