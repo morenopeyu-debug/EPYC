@@ -15,7 +15,9 @@ mb_internal_encoding('UTF-8');
  * la página. Render define APP_ENV=production; en tu equipo no existe y
  * se cae al modo de desarrollo.
  */
-$enProduccion = (getenv('APP_ENV') ?: 'local') === 'production';
+define('EN_PRODUCCION', (getenv('APP_ENV') ?: 'local') === 'production');
+
+$enProduccion = EN_PRODUCCION;
 
 ini_set('display_errors', $enProduccion ? '0' : '1');
 ini_set('display_startup_errors', $enProduccion ? '0' : '1');
