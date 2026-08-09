@@ -66,15 +66,29 @@ jobs:
     steps:
       - name: Visitar el servicio
         env:
-          URL: ${{ vars.URL_SERVICIO }}
+          # Se busca la dirección en tres lugares, en orden:
+          #
+          #   1. Una "variable" del repositorio (lo recomendado).
+          #   2. Un "secret" con el mismo nombre, porque confundir ambas
+          #      pestañas es facilísimo y el síntoma —el trabajo falla sin
+          #      explicar por qué— no ayuda nada a descubrirlo.
+          #   3. La dirección de onrender.com, que siempre existe.
+          #
+          # Con el respaldo 3, el vigilante funciona desde el primer
+          # minuto aunque no se configure nada. Al apuntar el dominio de
+          # DuckDNS, basta con crear la variable para que la use.
+          URL: ${{ vars.URL_SERVICIO || secrets.URL_SERVICIO || 'https://epyc-09qe.onrender.com' }}
         run: |
-          if [ -z "$URL" ]; then
-            echo "::error::Falta la variable URL_SERVICIO."
-            echo "Configúrala en Settings > Secrets and variables > Actions > Variables."
-            exit 1
-          fi
-
           echo "Destino: $URL"
+
+          if [ -n "${{ vars.URL_SERVICIO }}" ]; then
+            echo "  (tomada de la variable del repositorio)"
+          elif [ -n "${{ secrets.URL_SERVICIO }}" ]; then
+            echo "  (tomada de un secret — funciona, pero es más apropiada una variable:"
+            echo "   una dirección pública no es un secreto y así se lee en estos registros)"
+          else
+            echo "  (respaldo: no hay variable URL_SERVICIO configurada)"
+          fi
 
           # Tres visitas separadas 90 segundos. Cubren el retraso típico
           # del programador de GitHub sin dejar huecos de 15 minutos.
@@ -105,7 +119,11 @@ jobs:
           # durante el arranque en frío no debe llenarte el correo de
           # avisos de trabajos fallidos.
           if [ "$fallos" -ge 3 ]; then
-            echo "::error::Las tres visitas fallaron. Revisa el servicio en Render."
+            echo "::error::Las tres visitas a $URL fallaron."
+            echo "Revisa, en este orden:"
+            echo "  1. Que el servicio esté Live en Render."
+            echo "  2. Si $URL es un dominio de DuckDNS, que resuelva a 216.24.57.1"
+            echo "     y que esté verificado en Render > Settings > Custom Domains."
             exit 1
           fi
 
